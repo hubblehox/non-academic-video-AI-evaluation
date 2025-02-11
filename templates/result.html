@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 50%;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 10px;
+            background-color: #e0ffe0;
+            border: 1px solid #b2d8b2;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        a {
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Result from FastAPI</h2>
+        <div class="result">
+            <pre>{{ result | tojson(indent=2) }}</pre>
+        </div>
+        <a href="{{ url_for('index') }}">Submit another request</a>
+    </div>
+</body>
+</html>
