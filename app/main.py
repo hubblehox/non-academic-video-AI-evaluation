@@ -8,6 +8,7 @@ from app.common.utils import *
 from app.services.audio_transcribe import *
 from app.services.data_processing import Data_processing
 from app.services.emotion_detection import EmotionDetection
+from app.services.face_recognition import verify_person_in_video
 
 load_dotenv()
 
@@ -68,7 +69,7 @@ def __format_output(future_lst):
     communication_score = future_lst.get('communication_score', 0)
     emotion_score = future_lst.get('emotion_score', 0)
     feedback_handling_score = future_lst.get('feedback_handling_score', 0)
-    # overall_score = future_lst.get('overall_score', 0)
+    isSamePerson = future_lst.get('isSamePerson', False)
 
     response_lst = {
         'confidence': confidence if confidence > 0 else 0,
@@ -79,12 +80,12 @@ def __format_output(future_lst):
         'adaptability_score': adaptability_score if adaptability_score > 0 else 0,
         'communication_score': communication_score if communication_score > 0 else 0,
         'feedback_handling_score': feedback_handling_score if feedback_handling_score > 0 else 0,
-        # 'overall_score': overall_score if overall_score > 0 else 0
+        'isSamePerson': isSamePerson
     }
     return response_lst
 
 
-def main(video_path: str, audio_path: str, demo_content: dict):
+def main(video_path: str, audio_path: str, demo_content: dict, ref_image_path: str):
     """
     Args:
         video_path (str): Path of the video file
@@ -109,6 +110,8 @@ def main(video_path: str, audio_path: str, demo_content: dict):
         futures.append(future_3)
         future_4 = executor.submit(__grammar_score, txt, demo_content)
         futures.append(future_4)
+        future_5 = executor.submit(verify_person_in_video, video_path, "app/data/temp_frames", ref_image_path, threshold=0.2)
+        futures.append(future_5)
 
         concurrent.futures.wait(futures)
         for future in futures:
@@ -128,5 +131,5 @@ def main(video_path: str, audio_path: str, demo_content: dict):
             'emotion_score': 0,
             'communication_score': 0,
             'feedback_handling_score': 0,
-            # 'overall_score': 0
+            'isSamePerson': False
         }

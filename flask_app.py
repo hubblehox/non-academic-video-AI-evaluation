@@ -13,12 +13,14 @@ def index():
         video_path = request.form.get("VideoPath")
         subject = request.form.get("subject")
         role = request.form.get("role")
+        ref_image = request.form.get("RefImage")
         
         # Build the payload to send to FastAPI
         payload = [{
             "VideoPath": video_path,
             "subject": subject,
-            "role": role
+            "role": role,
+            "RefImage": ref_image 
         }]
         
         try:

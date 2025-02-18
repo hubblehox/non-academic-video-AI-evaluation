@@ -32,14 +32,19 @@ def predict(data: List[Dict]):
         processed_entry = entry.copy()
         try:
             video_path = 'app/data/video.mp4'
-            # response = requests.get(entry['VideoPath'])
-            # if response.status_code == 200:
-                # with open(video_path, 'wb') as f:
-                #     f.write(response.content)
-            print("Download successful.")
-            processed_entry['message'] = main(video_path, 'app/data/audio.mp3', entry)
-            # else:
-            #     raise Exception
+            ref_image_path = 'app/data/ref_image.jpeg'
+            response_ref_image = requests.get(entry['RefImage'])
+            response = requests.get(entry['VideoPath'])
+            if response.status_code == 200:
+                with open(video_path, 'wb') as f:
+                    f.write(response.content)
+                if response_ref_image.status_code == 200:
+                    with open(ref_image_path, 'wb') as f:
+                        f.write(response_ref_image.content)
+                print("Download successful.")
+                processed_entry['message'] = main(video_path, 'app/data/audio.mp3', entry, ref_image_path)
+            else:
+                raise Exception
         except:
             print(traceback.format_exc())
             processed_entry['message'] = "Couldn't download video"
