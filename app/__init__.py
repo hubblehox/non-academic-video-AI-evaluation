@@ -28,19 +28,18 @@ def predict(data: List[Dict]):
     if not data:
         raise HTTPException(status_code=400, detail="No data provided")
 
-    print(data)
     for entry in data:
         processed_entry = entry.copy()
         try:
             video_path = 'app/data/video.mp4'
-            # response = requests.get(entry['VideoPath'])
-            # if response.status_code == 200:
-            #     with open(video_path, 'wb') as f:
-            #         f.write(response.content)
-            print("Download successful.")
-            processed_entry['message'] = main(video_path, 'app/data/audio.mp3', entry)
-            # else:
-            #     raise Exception
+            response = requests.get(entry['VideoPath'])
+            if response.status_code == 200:
+                with open(video_path, 'wb') as f:
+                    f.write(response.content)
+                print("Download successful.")
+                processed_entry['message'] = main(video_path, 'app/data/audio.mp3', entry)
+            else:
+                raise Exception
         except:
             print(traceback.format_exc())
             processed_entry['message'] = "Couldn't download video"
