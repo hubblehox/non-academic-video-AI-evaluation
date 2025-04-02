@@ -31,7 +31,7 @@ def predict(data: List[Dict]):
     for entry in data:
         processed_entry = entry.copy()
         try:
-            video_path = 'app/data/video.mp4'
+            video_path = 'app/data/fake.mp4'
             response = requests.get(entry['VideoPath'])
             if response.status_code == 200:
                 with open(video_path, 'wb') as f:

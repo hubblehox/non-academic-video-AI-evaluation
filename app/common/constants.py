@@ -79,62 +79,11 @@ def grammer_prompt(txt: str, subject: str):
     else:
         return f"Rate the grammar score of the following speech on scale of 0-10. YOU WILL ONLY RETURN A INTEGER, WHICH IS THE SCORE. NOTHING ELSE. Speech: {txt}."
 
-def knowledge_prompt_non_acedamics(txt: str, subject: str, role: str, gen_answer: str):
+def knowledge_prompt_non_acedamics(txt: str, subject: str, role: str):
     
-    prompt = f"""The candidate has applied as for {role} as a {subject} position for acedamic and non-acedamic staff.
-                    You are an expert evaluator assessing interview responses for a role in {subject}. Your 
-                    task is to compare an AI-generated model answer with the candidate's answer and assign 
-                    scores based on predefined criteria. The evaluation should consider accuracy, clarity, 
-                    relevance, depth, and overall effectiveness of the response.
-
-                    The candidate's response:
-                    {txt}
-                    
-                    The AI-generated model answer:
-                    {gen_answer}
-
-                    **Scoring Breakdown**
-                    Each score is rated on a 0 to 10 scale, where:
-                    - 0-3 (Poor): Incomplete, off-topic, or lacks coherence.
-                    - 4-6 (Average): Somewhat relevant but lacks depth, clarity, or structure.
-                    - 7-8 (Good): Well-structured, relevant, and clear with minor areas for improvement.
-                    - 9-10 (Excellent): Exceptional response with strong examples, deep insights, and clarity.
-                    
-                    **Check whether all the questions are answered in the response and if the response is relevant to the role**
-                    1. Tell us about yourself.
-                    2. What do you know about Ampersand Group?
-                    3. What are your strengths and weaknesses?
-                    4. Why are you looking for a change?
-                    5. How do you prioritize tasks in multiple projects?
-                    6. How do you stay organized and manage workloads?
-                    7. How do you handle and grow from feedback?
-                    
-                    Score Categories Explained
-                    1. Knowledge Score (0-10)
-                    - Evaluates the depth of understanding in {subject}.
-                    - Checks for factual correctness, industry awareness, and expertise.
-                    
-                    2. Introduction Score (0-10)
-                    - Assesses how well the candidate introduces themselves.
-                    - Looks at engagement, clarity, and relevance to the role.
-                    
-                    3. Adaptability Score (0-10)
-                    - Measures flexibility in learning and handling changes.
-                    - Evaluates responses to challenges or shifts in work environment.
-                    
-                    4. Feedback Handling Score (0-10)
-                    - Measures openness to constructive criticism.
-                    - Looks at how well the candidate applies feedback for improvement.
-
-                    Generate a JSON output in the following format:                        
-                    {{
-                        "knowledge_score": [0-10],          # Evaluation of the introduction, clarity, and engagement.  
-                        "introduction_score": [0-10],       # Assessment of industry knowledge, technical depth, and relevance.
-                        "adaptability_score": [0-10],       # How well the candidate demonstrates flexibility and learning ability.
-                        "feedback_handling_score": [0-10],  # Assessment of how the candidate receives and applies feedback.
-                    }}
-                    
-                    **GENERATE THE ANSWER IN THE FOLLOWING JSON FORMAT ONLY - NO FURTHER EXPLAINATNION NEEDED**
+    prompt = f"""
+                The candidate's response:
+                    **{txt}**
                 """
     return prompt
 
@@ -195,6 +144,49 @@ def gen_answer_prompt_func(subject: str):
         - Submit your answers in a well-organized and polished format that showcases your qualifications and suitability for the role within {subject} at the Ampersand Group.
         - Provide the answer only without any additional information.
         - Do not include any index numbers or bullet points in your response.
+    """
+
+def sys_instruct_non_academic(role: str, subject: str):
+    return f"""
+        Candidate has applied for the job where the role is {role} and the base subject or field is {subject}.
+        If the candidate's speech is not covering the topic, keep the knowledge_score 0.
+        evaluate candidates knowledge on the given topic,
+        
+        **Scoring Breakdown**
+        Each score is rated on a 0 to 10 scale, where:
+        - 0-3 (Poor): Incomplete, off-topic, or lacks coherence.
+        - 4-6 (Average): Somewhat relevant but lacks depth, clarity, or structure.
+        - 7-8 (Good): Well-structured, relevant, and clear with minor areas for improvement.
+        - 9-10 (Excellent): Exceptional response with strong examples, deep insights, and clarity.
+        
+        **Check whether answer of all the questions are given by the candidate in response and if the response is relevant to the role**
+        1. Tell us about yourself.
+        2. What do you know about Ampersand Group?
+        3. What are your strengths and weaknesses?
+        4. Why are you looking for a change?
+        5. How do you prioritize tasks in multiple projects?
+        6. How do you stay organized and manage workloads?
+        7. How do you handle and grow from feedback?
+        
+        Instruction for Analysing the answer:
+        - Candidate should have provided the answer of the question.
+        - Check whether the answer is suitable for the question.
+        - Check whether the answer is relevant to the question.
+        
+        Return the below JSON only after evaluation,
+        {{
+            "subject_given": "string",
+            "subject_explained": "string",
+            "knowledge_score": [0-10] (Rating of how well the candidate is able to explain the given subject on a scale of 0-10, do not reduce rating for indirect examples. Do not assess strictly),
+            "reason" : "Reason for above evaluation",
+            "question_1_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `Tell us about yourself.`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_2_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `What do you know about Ampersand Group?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_3_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `What are your strengths and weaknesses?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_4_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `Why are you looking for a change?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_5_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `How do you prioritize tasks in multiple projects?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_6_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `How do you stay organized and manage workloads?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+            "question_7_rate": [0-10] (Rating of how well the candidate is able to explain the given question (where the question is, `How do you handle and grow from feedback?`) on a scale of [0-10], do not reduce rating for indirect explaination or example. Rate based on scoring breakdown.),
+        }}
     """
 
 def grammer_prompt(txt: str, subject: str):

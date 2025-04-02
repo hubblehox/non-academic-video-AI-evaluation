@@ -3,6 +3,7 @@ import re
 import json
 import time
 import cv2
+import math
 import librosa
 import numpy as np
 
@@ -11,7 +12,9 @@ from mutagen.mp3 import MP3
 from collections import Counter
 from pydub import AudioSegment, silence
 
-from app.common.constants import knowledge_prompt, grammer_prompt, gen_answer_prompt_func, knowledge_prompt_non_acedamics
+from app.common.constants import knowledge_prompt, grammer_prompt, \
+    knowledge_prompt_non_acedamics, \
+    sys_instruct_non_academic
 
 
 def detect_silence(audio_path):
@@ -221,41 +224,45 @@ def emotion_score(emotion_dictionary: dict, logger):
 
 
 def analyze_transcript_non_academics(txt, dic: dict, logger):
+    knowledge_score = 0
+    adaptability_score = 0
+    introduction_score = 0
+    feedback_handling_score = 0
+    
     logger.info("Comparison of content started")
     client = OpenAI(api_key=os.environ.get("OpenAI_API_KEY"))
     start = time.time()
-    
-    gen_answer_prompt = gen_answer_prompt_func(dic.get('subject', ''))
-        
-    gen_answer = client.chat.completions.create(model="gpt-4o-mini", messages=[
-        {
-            'role': 'user',
-            'content': gen_answer_prompt
-        }
-    ], temperature=0.01)
-    gen_answer = str(gen_answer.choices[0].message.content)
 
     prompt = knowledge_prompt_non_acedamics(
         txt=txt,
         subject=dic.get('subject', ''),
-        role=dic.get('role', ''),
-        gen_answer=gen_answer
+        role=dic.get('role', '')
     )
+    
+    sys_instruct = sys_instruct_non_academic(dic.get('role', ''), dic.get('subject', ''))
 
-    response = client.chat.completions.create(model="gpt-4o-mini", messages=[
-        {
-            'role': 'user',
-            'content': prompt
-        }
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                'role': 'system',
+                'content': sys_instruct
+            },
+            {
+                'role': 'user',
+                'content': prompt
+            }
     ], temperature=0.01)
     end = time.time()
     logger.info("Content comparison in " + str(round(end-start, 2)) + "s")    
     
-    all_scores = json.loads(response.choices[0].message.content.replace("```", "").replace("json", "").strip())
+    res_score = json.loads(response.choices[0].message.content.replace("```", "").replace("json", "").strip())
     
-    knowledge_score = all_scores.get('knowledge_score', 0)
-    introduction_score = all_scores.get('introduction_score', 0)
-    adaptability_score = all_scores.get('adaptability_score', 0)
-    feedback_handling_score = all_scores.get('feedback_handling_score', 0)
+    introduction_score = (res_score.get('question_1_rate', 0) + res_score.get('question_2_rate', 0))/2
+    
+    adaptability_score = (res_score.get('question_3_rate', 0) + res_score.get('question_4_rate', 0) + res_score.get('question_5_rate', 0) + res_score.get('question_6_rate', 0))/4
+    
+    feedback_handling_score = res_score.get('question_7_rate', 0)
+    knowledge_score = res_score.get('knowledge_score', 0)
 
-    return knowledge_score, introduction_score, adaptability_score, feedback_handling_score
+    return math.ceil(knowledge_score), math.ceil(introduction_score), math.ceil(adaptability_score), math.ceil(feedback_handling_score)

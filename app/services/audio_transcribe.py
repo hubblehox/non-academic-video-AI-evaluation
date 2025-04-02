@@ -12,7 +12,7 @@ def transcribe(audio_path: str, subject: str):
         subject (str): subject of the video
     """
     if subject.lower() == 'hindi':
-        aai.settings.api_key = os.environ.get("Assembly_API_KEY")
+        aai.settings.api_key = os.getenv("Assembly_API_KEY")
         transcriber = aai.Transcriber()
         config = aai.TranscriptionConfig(
             language_code='hi',
@@ -37,4 +37,5 @@ def transcribe(audio_path: str, subject: str):
             feature_extractor=processor.feature_extractor
         )
         transcript = pipe(audio_path)
+        # print(transcript)
         return transcript['text']

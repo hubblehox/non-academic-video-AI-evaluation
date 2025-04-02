@@ -31,7 +31,7 @@ def __process_audio(video_path: str, audio_path: str, subject: str):
 
 def __similarity_score(txt, dic):
     try:
-        if dic.get("department_group") == "Academics":
+        if dic.get("department_group") == "Academic":
             similarity_score, introduction_score, example_score, methodology_score = \
                 analyze_transcript(txt=txt, dic=dic, logger=logger)
             print("Academics Flow")
@@ -95,7 +95,7 @@ def main(video_path: str, audio_path: str, demo_content: dict):
         future_lst = {}
         futures = []
 
-        executor = concurrent.futures.ThreadPoolExecutor(2)
+        executor = concurrent.futures.ThreadPoolExecutor(os.cpu_count() - 2)
 
         transcription = executor.submit(__process_audio, video_path, audio_path, demo_content.get('subject',''))
         future_1 = executor.submit(__cv_task_handler, video_path)
